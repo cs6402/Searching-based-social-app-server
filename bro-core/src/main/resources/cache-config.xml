@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:repository="http://www.springframework.org/schema/data/repository"
+	xmlns:cache="http://www.springframework.org/schema/cache" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans     
+          http://www.springframework.org/schema/beans/spring-beans.xsd 
+          http://www.springframework.org/schema/context     
+          http://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/util     
+          http://www.springframework.org/schema/util/spring-util.xsd
+          http://www.springframework.org/schema/data/jpa
+          http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd     
+           http://www.springframework.org/schema/mvc  
+                        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+          http://www.springframework.org/schema/tx      
+          http://www.springframework.org/schema/tx/spring-tx.xsd 
+                   http://www.springframework.org/schema/cache
+           http://www.springframework.org/schema/cache/spring-cache-3.1.xsd 
+           http://www.springframework.org/schema/task 
+           http://www.springframework.org/schema/task/spring-task-3.0.xsd "
+	default-autowire="byName" default-lazy-init="false">
+	<context:component-scan base-package="com.tdsoft.bro.core.service.cache.impl" />
+	<!-- <context:property-placeholder location="classpath:cache.properties"/> -->
+	<bean id="stringRedisSerializer"
+		class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		
+	<!-- Redis Client Setting -->
+	<bean id="jedisConnectionFactory" autowire-candidate="false"
+		class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="hostName" value="${core_cache_ip}" />
+		<property name="port" value="${core_cache_port}" />
+		<property name="password" value="${core_cache_password}" />
+	</bean>
+
+	<!-- Default Redis Client Setting -->
+	<bean id="defaultRedisClient" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<property name="defaultSerializer" ref="stringRedisSerializer" />
+	</bean>
+
+	<!-- Device Redis Client Setting -->
+	<bean id="deviceRedisClient" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<property name="defaultSerializer" ref="stringRedisSerializer" />
+	</bean>
+
+	<!-- Message -->
+	<bean id="messageRedisClient" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<property name="defaultSerializer" ref="stringRedisSerializer" />
+	</bean>
+	<!-- Tag -->
+	<bean id="tagRedisClient" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<property name="defaultSerializer" ref="stringRedisSerializer" />
+	</bean>
+	<!-- TTL Listener Setting -->
+	<bean id="messageListener"
+		class="org.springframework.data.redis.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="${core_cache_message_listener_class}" />
+		</constructor-arg>
+	</bean>
+	<bean id="messageListenerContainer"
+		class="org.springframework.data.redis.listener.RedisMessageListenerContainer">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<property name="messageListeners">
+			<map>
+				<!-- <entry key-ref="messageListener"> <bean class="org.springframework.data.redis.listener.PatternTopic"> 
+					<constructor-arg value="${core_cache_message_topic}" /> </bean> </entry> -->
+			</map>
+		</property>
+	</bean>
+</beans>

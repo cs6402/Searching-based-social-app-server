@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd" 
+	updateCheck="true"
+	monitoring="autodetect" 
+	dynamicConfig="true">
+	
+	<!-- timeToLiveSeconds 只活這段時間，存取也沒用
+	timeToIdleSeconds 存取後可以再補完時間 -->
+	<cache name="deviceInfoLocalCache" 
+		maxEntriesLocalHeap="10000"
+		eternal="false" 
+		timeToIdleSeconds="300"
+		memoryStoreEvictionPolicy="LFU" 
+		transactionalMode="off">
+	</cache>
+</ehcache>

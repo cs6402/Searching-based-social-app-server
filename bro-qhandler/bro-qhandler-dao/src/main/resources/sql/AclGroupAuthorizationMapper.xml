@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<sqlMap>
+	<typeAlias alias="person" type="po.Person" />
+	
+	<insert id="insertPerson" parameterClass="po.Person">
+	   <![CDATA[
+	       insert into person values (#id#,#name#,#sex#)
+	   ]]>
+	</insert>
+	
+	<delete id="deleteById" parameterClass="int">
+	    <![CDATA[
+	       delete from person where id=#id#
+	    ]]>
+	</delete>
+	
+	<update id="updatePerson" parameterClass="po.Person">
+		 <![CDATA[
+		       update person set name=#{name},sex=#sex# where id=#id#
+		 ]]>
+	</update>
+	
+	<select id="queryById" parameterClass="int" resultClass="po.Person">
+	     <![CDATA[
+		      select * from person where id=#id#
+		 ]]>
+	</select>
+	
+	<select id="queryAllPerson" cacheModel="personCache" resultClass="po.Person">
+	     <![CDATA[
+		       select * from person
+		 ]]>
+	</select>
+</sqlMap>

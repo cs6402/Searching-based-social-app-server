@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:repository="http://www.springframework.org/schema/data/repository"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans     
+          http://www.springframework.org/schema/beans/spring-beans.xsd 
+          http://www.springframework.org/schema/context     
+          http://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/data/jpa
+          http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd     
+           http://www.springframework.org/schema/mvc  
+                        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+          http://www.springframework.org/schema/tx      
+          http://www.springframework.org/schema/tx/spring-tx.xsd 
+                   http://www.springframework.org/schema/cache
+           http://www.springframework.org/schema/cache/spring-cache-3.1.xsd"
+           default-autowire="byName" default-lazy-init="false">
+    <!--<context:property-placeholder
+		location="classpath:ds.properties" />
+	 JPA --> 
+	<jpa:repositories base-package="com.tdsoft.bro"
+		transaction-manager-ref="transactionManager"
+		entity-manager-factory-ref="entityManagerFactory" />
+
+	<!-- DataSource -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${ds_driver_class_name}"></property>
+		<property name="url" value="${ds_url}"></property>
+		<property name="username" value="${ds_user_name}"></property>
+		<property name="password" value="${ds_password}"></property>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!--Entity Manager -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="com.tdsoft.bro.**.entity" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<!-- -->
+				<prop key="hibernate.hbm2ddl.auto">${ds_hbm2ddl_auto}</prop> 
+				<prop key="hibernate.show_sql">${ds_hibernate_show_sql}</prop>
+				<prop key="hibernate.dialect">${ds_hibernate_dialect}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- TxManager -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+	<!-- ibatis Setting 
+	<bean id="sqlSessionFactory" class="org.springframework.orm.ibatis3.SqlSessionFactoryBean">
+		<property name="configLocations">
+		<list>
+			<value>classpath:ibatis-config.xml</value>
+		</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<bean id="sqlSessionTemplate" class="org.springframework.orm.ibatis3.SqlSessionTemplate">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>-->
+</beans>

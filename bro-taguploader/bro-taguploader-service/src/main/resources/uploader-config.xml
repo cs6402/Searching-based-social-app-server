@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:repository="http://www.springframework.org/schema/data/repository"
+	xmlns:cache="http://www.springframework.org/schema/cache" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans     
+          http://www.springframework.org/schema/beans/spring-beans.xsd 
+          http://www.springframework.org/schema/context     
+          http://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/util     
+          http://www.springframework.org/schema/util/spring-util.xsd
+          http://www.springframework.org/schema/data/jpa
+          http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd     
+           http://www.springframework.org/schema/mvc  
+                        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+          http://www.springframework.org/schema/tx      
+          http://www.springframework.org/schema/tx/spring-tx.xsd 
+                   http://www.springframework.org/schema/cache
+           http://www.springframework.org/schema/cache/spring-cache-3.1.xsd 
+           http://www.springframework.org/schema/task 
+           http://www.springframework.org/schema/task/spring-task-3.0.xsd
+                      http://www.springframework.org/schema/aop
+http://www.springframework.org/schema/aop/spring-aop.xsd"
+	default-autowire="byName" default-lazy-init="false">
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:uploader.properties</value>
+				<value>classpath:AWSCredentials.properties</value>
+				<value>classpath:cache.properties</value>
+				<value>classpath:search.properties</value>
+			</list>
+		</property>
+	</bean>
+	<context:component-scan base-package="com.tdsoft.bro.taguploader.service" />
+	<bean class="com.tdsoft.bro.common.util.SpringContextUtil" />
+	<import resource="classpath:cache-config.xml" />
+	<import resource="classpath:search-config.xml" />
+	<import resource="classpath:lv2-cache-config.xml" />
+	<task:annotation-driven />
+
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+
+		<property name="corePoolSize" value="${uploader_core_pool_size}" />
+		<property name="maxPoolSize" value="${uploader_max_pool_size}" />
+		<!-- <property name="queueCapacity" value="${uploader_queue_capacity}" 
+			/> -->
+	</bean>
+	<!-- Uploader Task -->
+	<bean id="uploaderTask" class="com.tdsoft.bro.taguploader.service.UploadTagTask"
+		scope="prototype">
+		<property name="taskName" value="${uploader_task_name}" />
+		<property name="messagePendingQueue" ref="uploaderQueue" />
+	</bean>
+
+	<bean id="uploaderTokenReceiver" class="com.tdsoft.bro.taguploader.service.TokenReceiver">
+		<property name="messagePendingQueue" ref="uploaderQueue" />
+		<property name="taskName" value="${uploader_task_name}" />
+	</bean>
+	<bean id="uploaderQueue" class="java.util.concurrent.LinkedBlockingQueue" />
+
+	<task:scheduled-tasks>
+		<task:scheduled ref="uploaderTokenReceiver" method="execute"
+			fixed-rate="${uploader_repeat_interval}" />
+	</task:scheduled-tasks>
+
+	<!-- ST -->
+	<aop:aspectj-autoproxy />
+	<bean id="performanceMonitor"
+		class="org.springframework.aop.interceptor.JamonPerformanceMonitorInterceptor">
+	</bean>
+	<aop:config>
+		<aop:pointcut id="service"
+			expression="execution(* com.tdsoft.bro.*.service.impl.*.*(..))" />
+		<aop:pointcut id="sendQ"
+			expression="execution(* com.amazonaws.services.sqs.AmazonSQSClient.sendMessage(..))" />
+		<aop:pointcut id="push"
+			expression="execution(* com.amazonaws.services.sns.AmazonSNSClient.publish(..))" />
+		<aop:pointcut id="cache"
+			expression="execution(* com.tdsoft.bro.core.service.cache.impl.*.getTag(..))" />
+		<aop:pointcut id="search"
+			expression="execution(* com.tdsoft.bro.core.service.search.impl.*.*(..))" />
+		<aop:pointcut id="dao"
+			expression="execution(* com.tdsoft.bro.core.dao.*.*(..))" />
+		<aop:advisor pointcut-ref="service" advice-ref="performanceMonitor" />
+		<aop:advisor pointcut-ref="sendQ" advice-ref="performanceMonitor" />
+		<aop:advisor pointcut-ref="push" advice-ref="performanceMonitor" />
+		<aop:advisor pointcut-ref="cache" advice-ref="performanceMonitor" />
+		<aop:advisor pointcut-ref="search" advice-ref="performanceMonitor" />
+		<aop:advisor pointcut-ref="dao" advice-ref="performanceMonitor" />
+	</aop:config>
+</beans>

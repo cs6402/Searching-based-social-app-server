@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:repository="http://www.springframework.org/schema/data/repository"
+	xmlns:cache="http://www.springframework.org/schema/cache" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans     
+          http://www.springframework.org/schema/beans/spring-beans.xsd 
+          http://www.springframework.org/schema/context     
+          http://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/util     
+          http://www.springframework.org/schema/util/spring-util.xsd
+          http://www.springframework.org/schema/data/jpa
+          http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd     
+           http://www.springframework.org/schema/mvc  
+                        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+          http://www.springframework.org/schema/tx      
+          http://www.springframework.org/schema/tx/spring-tx.xsd 
+                   http://www.springframework.org/schema/cache
+           http://www.springframework.org/schema/cache/spring-cache-3.1.xsd
+                      http://www.springframework.org/schema/task 
+           http://www.springframework.org/schema/task/spring-task-3.0.xsd  "
+           default-autowire="byName" default-lazy-init="false">
+	<bean id="updlocationTask" class="com.tdsoft.bro.qhandler.consumer.task.LocationUpdateTask" scope="prototype" >
+		<property name="messagePendingQueue" ref="updlocationQueue"/>
+		<property name="taskName" value="${updlocation_task_name}"/>
+	</bean>
+
+	<bean id="updlocationQConsumer" class="com.tdsoft.bro.qhandler.consumer.QConsumer">
+		<property name="messagePendingQueue" ref="updlocationQueue"/>
+		<property name="taskName" value="${updlocation_task_name}"/>
+		<property name="timeout" value="${task_execution_timeout}"/>
+		<property name="receiveMessageRequest" ref="updlocationQRequest"/>
+	</bean>
+
+	<bean id="updlocationQRequest" class="com.amazonaws.services.sqs.model.ReceiveMessageRequest">
+		<property name="waitTimeSeconds" value="20"/>
+		<property name="queueUrl" value="${queue_device_update_location_url}"/>
+		<property name="maxNumberOfMessages" value="10"/>
+	</bean>
+
+	<bean id="updlocationQueue" class="java.util.concurrent.LinkedBlockingQueue"/>
+
+	<task:scheduled-tasks>
+    	<task:scheduled ref="updlocationQConsumer" method="consume" fixed-rate="${queue_consume_interval}" />
+	</task:scheduled-tasks>
+</beans>
