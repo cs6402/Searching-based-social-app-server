@@ -15,7 +15,7 @@ We guarantee that everyone only can search tag to mathc their new friend.
   - APNS
 
 ### Feature:
-  - No register user login
+  - Register-free user login
   - Scalable, stable, durable
   - Stateless http  request for clustering architecture
   - Support multiple database types
